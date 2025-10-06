@@ -1,5 +1,5 @@
 import { extractHashtags, getDocuments } from "@/utils/readwise";
-import { getAccessTokenFromRequest } from "./session";
+import { getAccessTokenFromRequest } from "@/utils/session";
 
 export async function POST(req: Request) {
   const token = getAccessTokenFromRequest(req);

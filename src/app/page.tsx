@@ -1,9 +1,8 @@
 // @ts-ignore: allow importing CSS as a side-effect (handled by the bundler)
-import "./index.css";
-import { categoryEnum, locationEnum, type ReadwiseItem } from "./utils/types";
+import { categoryEnum, locationEnum, ReadwiseItem } from "@/utils/types";
 import { useEffect, useState } from "react";
 
-export function App() {
+export function Home() {
   const [tokenInput, setTokenInput] = useState<string>("");
   const [authStatus, setAuthStatus] = useState<
     "unknown" | "authenticated" | "missing"
@@ -1197,4 +1196,4 @@ export function App() {
   );
 }
 
-export default App;
+export default Home;
