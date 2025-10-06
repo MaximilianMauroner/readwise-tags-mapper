@@ -1,4 +1,4 @@
-// @ts-ignore: allow importing CSS as a side-effect (handled by the bundler)
+"use client";
 import { categoryEnum, locationEnum, ReadwiseItem } from "@/utils/types";
 import { useEffect, useState } from "react";
 
