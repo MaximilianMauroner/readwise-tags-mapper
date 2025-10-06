@@ -5,8 +5,12 @@ import {
 } from "@/utils/readwise";
 import { getAccessTokenFromRequest } from "@/utils/session";
 
-export async function GET(req: Request, ctx: { params: { id: string } }) {
-  const id = ctx.params.id;
+export async function GET(
+  req: Request,
+  ctx: { params: Promise<{ id: string }> }
+) {
+  const params = await ctx.params;
+  const id = params.id;
   const token = getAccessTokenFromRequest(req);
   if (!token) {
     return Response.json(
@@ -22,8 +26,13 @@ export async function GET(req: Request, ctx: { params: { id: string } }) {
     tags: extractHashtags(doc?.summary),
   });
 }
-export async function PATCH(req: Request, ctx: { params: { id: string } }) {
-  const id = ctx.params.id;
+
+export async function PATCH(
+  req: Request,
+  ctx: { params: Promise<{ id: string }> }
+) {
+  const params = await ctx.params;
+  const id = params.id;
   const token = getAccessTokenFromRequest(req);
   if (!token) {
     return Response.json(

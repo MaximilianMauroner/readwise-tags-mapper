@@ -2,7 +2,7 @@
 import { categoryEnum, locationEnum, ReadwiseItem } from "@/utils/types";
 import { useEffect, useState } from "react";
 
-export function Home() {
+function Home() {
   const [tokenInput, setTokenInput] = useState<string>("");
   const [authStatus, setAuthStatus] = useState<
     "unknown" | "authenticated" | "missing"
