@@ -1,7 +1,7 @@
 import {
   getAccessTokenFromRequest,
   verifyTokenWithReadwise,
-} from "@/utils/session";
+} from "api/session";
 
 export async function POST(req: Request) {
   const body = (await req.json().catch(() => ({}))) as {

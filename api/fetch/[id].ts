@@ -3,7 +3,7 @@ import {
   getDocumentById,
   updateDocumentApi,
 } from "@/utils/readwise";
-import { getAccessTokenFromRequest } from "@/utils/session";
+import { getAccessTokenFromRequest } from "api/session";
 
 export async function GET(req: Request, ctx: { params: { id: string } }) {
   const id = ctx.params.id;
