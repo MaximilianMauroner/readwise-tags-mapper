@@ -1,3 +1,5 @@
-export function GET(request: Request) {
-  return new Response("Hello from Vercel!");
-}
+export default {
+  fetch(request: Request) {
+    return new Response("Hello from Vercel!");
+  },
+};
