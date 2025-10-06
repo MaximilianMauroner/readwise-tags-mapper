@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/*": {
+      "runtime": "bun@1.1.20"
+    }
+  }
+}
