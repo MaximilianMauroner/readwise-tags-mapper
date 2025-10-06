@@ -56,7 +56,7 @@ export const readwiseItemSchema = z.object({
   reading_time: z.string().nullable(),
   created_at: z.string(),
   updated_at: z.string(),
-  published_date: z.number().nullable(),
+  published_date: z.any().nullable(),
   summary: z.string().nullable(),
   image_url: z.string().nullable(),
   parent_id: z.string().nullable(),

@@ -11,6 +11,10 @@ import {
   type UpdateReadwiseItem,
 } from "./types";
 
+type AuthenticatedRequestInit = RequestInit & {
+  authToken?: string;
+};
+
 const MAX_RATE_LIMIT_RETRIES = 5;
 const DEFAULT_RETRY_DELAY_MS = 1_500;
 
@@ -37,18 +41,22 @@ const getRetryAfterDelayMs = (response: Response): number | null => {
 
 const fetchWrapper = async <T>(
   input: string | URL | Request,
-  init?: RequestInit
+  init?: AuthenticatedRequestInit
 ): Promise<T> => {
-  const token = process.env.ACCESS_TOKEN;
+  const { authToken, headers, ...restInit } = init ?? {};
 
-  const existingHeaders =
-    (init && (init.headers as Record<string, string>)) || {};
-  const headersObj: Record<string, string> = { ...existingHeaders };
-  if (token) headersObj.Authorization = `Token ${token}`;
+  if (!authToken) {
+    throw new Error(
+      "Missing Readwise access token. Ensure the authentication cookie is set before making requests."
+    );
+  }
+
+  const headersInstance = new Headers(headers ?? undefined);
+  headersInstance.set("Authorization", `Token ${authToken}`);
 
   const buildRequestInit = (): RequestInit => ({
-    ...init,
-    headers: new Headers(headersObj),
+    ...restInit,
+    headers: headersInstance,
   });
 
   let retryCount = 0;
@@ -81,11 +89,37 @@ const fetchWrapper = async <T>(
       );
     }
 
-    return (await response.json()) as T;
+    if (response.status === 204 || response.status === 205) {
+      return undefined as T;
+    }
+
+    const contentType = response.headers.get("Content-Type") ?? "";
+
+    if (contentType.includes("application/json")) {
+      return (await response.json()) as T;
+    }
+
+    const text = await response.text();
+    if (!text.trim()) {
+      return undefined as T;
+    }
+
+    try {
+      return JSON.parse(text) as T;
+    } catch {
+      throw new Error(
+        `Expected JSON response but received content type '${
+          contentType || "unknown"
+        }'.`
+      );
+    }
   }
 };
 
-const fetchDocumentListApi = async (options: FetchDocumentListOptions = {}) => {
+const fetchDocumentListApi = async (
+  token: string,
+  options: FetchDocumentListOptions = {}
+) => {
   let fullData: ReadwiseItem[] = [];
   let nextPageCursor: string | null = options.pageCursor ?? null;
 
@@ -110,26 +144,10 @@ const fetchDocumentListApi = async (options: FetchDocumentListOptions = {}) => {
     const url = "https://readwise.io/api/v3/list/?" + queryParams.toString();
     const response = await fetchWrapper<ReadwiseListResponse>(url, {
       method: "GET",
+      authToken: token,
     });
-    // try {
-    //   const { appendFile } = await import("fs/promises");
-    //   const logPath = `dev-${Date.now()}-${options.location ?? ""}-${
-    //     options.category ?? ""
-    //   }.json`;
-    //   await appendFile(logPath, JSON.stringify(response) + "\n", "utf8");
-    // } catch (err) {
-    //   console.error("Failed to write dev.log:", (err as Error).message ?? err);
-    // }
-    // console.log(
-    //   `dev-${Date.now()}-${options.location ?? ""}-${
-    //     options.category ?? ""
-    //   }.json`
-    // );
-    const parsedResponse = readwiseListResponseSchema.parse(response);
 
-    // log count when present
-    if (typeof parsedResponse.count === "number")
-      console.log(parsedResponse.count);
+    const parsedResponse = readwiseListResponseSchema.parse(response);
 
     const results = parsedResponse.results ?? [];
     fullData.push(...results);
@@ -142,6 +160,7 @@ const fetchDocumentListApi = async (options: FetchDocumentListOptions = {}) => {
 };
 
 export const updateDocumentApi = async (
+  token: string,
   id: string,
   payload: UpdateDocumentPayload
 ) => {
@@ -153,20 +172,23 @@ export const updateDocumentApi = async (
       "Content-Type": "application/json",
     },
     body: JSON.stringify(payload),
+    authToken: token,
   });
   const parsedResponse = updateReadwiseItemSchema.parse(response);
   return parsedResponse;
 };
 
 export const getDocumentById = async (
+  token: string,
   id: string,
   options: Omit<FetchDocumentListOptions, "id" | "pageCursor"> = {}
 ) => {
-  const results = await fetchDocumentListApi({ ...options, id });
+  const results = await fetchDocumentListApi(token, { ...options, id });
   return results[0] ?? null;
 };
 
 export const getDocuments = async (
+  token: string,
   locations: string[],
   categories: string[],
   pageCursor: string | null = null
@@ -176,7 +198,7 @@ export const getDocuments = async (
     const lo = locationEnum.parse(loc);
     for (const cat of categories) {
       const ca = categoryEnum.parse(cat);
-      const docs = await fetchDocumentListApi({
+      const docs = await fetchDocumentListApi(token, {
         location: lo,
         category: ca,
         pageCursor,
