@@ -43,6 +43,7 @@ function Home() {
   const [isFetchingBatch, setIsFetchingBatch] = useState<boolean>(false);
   const [isUpdatingTags, setIsUpdatingTags] = useState<boolean>(false);
   const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set());
+  const [isFilteringAligned, setIsFilteringAligned] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchSessionStatus = async () => {
@@ -371,11 +372,8 @@ function Home() {
       const tags = data.doc ? Object.keys(data.doc.tags) : [];
 
       tags.sort((a, b) => a.localeCompare(b));
-      setDocumentTags(tags);
 
-      const tagSet = new Set(tags);
-      data.tags.forEach((t) => tagSet.add(t));
-
+      const tagSet = new Set(data.tags);
       setSelectedTags(tagSet);
       if (data.doc) {
         setActiveDocId(data.doc.id);
@@ -550,7 +548,7 @@ function Home() {
     const existing = doc?.tags ? Object.keys(doc.tags) : docTags ?? [];
     existing.sort((a, b) => a.localeCompare(b));
     setDocumentTags(existing);
-    const tagSet = new Set(existing);
+    const tagSet = new Set(docTags);
     (docTags ?? []).forEach((t) => tagSet.add(t));
     setSelectedTags(tagSet);
     setExtractedTags(
@@ -578,10 +576,10 @@ function Home() {
               <h1 className="text-lg font-semibold text-gray-900 lg:text-xl">
                 Readwise Tags Mapper
               </h1>
-              <p className="text-xs text-gray-500 lg:text-sm">
+              {/* <p className="text-xs text-gray-500 lg:text-sm">
                 Authenticate, fetch documents, and curate tags from one tidy
                 surface.
-              </p>
+              </p> */}
             </div>
           </div>
           <span
@@ -616,10 +614,10 @@ function Home() {
                 <h2 className="text-base font-semibold text-gray-900 lg:text-lg">
                   Enter your Readwise access token
                 </h2>
-                <p className="mt-1 text-xs text-gray-600 lg:text-sm">
+                {/* <p className="mt-1 text-xs text-gray-600 lg:text-sm">
                   Validate instantly and manage the credential whenever you
                   need.
-                </p>
+                </p> */}
                 <a
                   href="https://readwise.io/access_token"
                   target="_blank"
@@ -728,10 +726,10 @@ function Home() {
                   </label>
                 </div>
               </div>
-              <p className="text-xs text-gray-500 lg:text-sm">
+              {/* <p className="text-xs text-gray-500 lg:text-sm">
                 Switch once and keep filters tucked away until you need to tweak
                 them again.
-              </p>
+              </p> */}
             </div>
 
             {runSingle ? (
@@ -889,6 +887,12 @@ function Home() {
                 </span>
               )}
             </button>
+            <button
+              onClick={() => setIsFilteringAligned((prev) => !prev)}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-indigo-200 bg-white px-3 py-2 text-sm font-semibold text-indigo-600 shadow-sm transition hover:border-indigo-300 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isFilteringAligned ? "Unfilter" : "Filter"} Aligned
+            </button>
 
             <div className="max-h-[70vh] overflow-y-auto space-y-3 pr-1 pb-24">
               {fetchedDocs.length === 0 ? (
@@ -925,12 +929,15 @@ function Home() {
                     ? "border-amber-300 bg-amber-50/70 hover:border-amber-400 hover:bg-amber-100"
                     : "border-gray-200 bg-white hover:border-indigo-200 hover:shadow-md";
 
+                  if (!hasDiff && isFilteringAligned) {
+                    return null;
+                  }
+
                   return (
-                    <button
+                    <div
                       key={doc.id}
-                      type="button"
                       onClick={() => loadDocIntoPane(doc, docTags)}
-                      className={`w-full rounded-2xl border p-4 text-left transition ${cardHighlight}`}
+                      className={`w-full rounded-2xl border p-4 text-left transition cursor-pointer ${cardHighlight}`}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1">
@@ -1030,7 +1037,7 @@ function Home() {
                           </span>
                         )}
                       </div>
-                    </button>
+                    </div>
                   );
                 })
               )}
@@ -1059,10 +1066,10 @@ function Home() {
                   )}
                 </div>
               </div>
-              <p className="text-sm text-gray-500">
+              {/* <p className="text-sm text-gray-500">
                 Review the AI summary, curate the tag set, and apply when you're
                 ready.
-              </p>
+              </p> */}
             </div>
 
             <div className="space-y-3">
@@ -1073,7 +1080,7 @@ function Home() {
                 value={sampleText}
                 readOnly
                 rows={8}
-                className="w-full resize-none rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm leading-relaxed text-gray-700"
+                className="w-full h-[400px] resize-none rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm leading-relaxed text-gray-700"
               />
             </div>
 
